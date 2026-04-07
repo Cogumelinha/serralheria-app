@@ -1,5 +1,6 @@
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 void main() {
   runApp(MyApp());
@@ -31,13 +32,21 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
+
 class _HomePageState extends State<HomePage> {
 
   final PageController _pageControllerCima =
-      PageController(viewportFraction: 0.7);
+      PageController(viewportFraction: 0.8);
 
   final PageController _pageControllerBaixo =
-      PageController(viewportFraction: 0.7);
+      PageController(viewportFraction: 0.8);
+
+  int _paginaAtualCima = 0;
+
+  Timer? _timerCima;
+
+  int _paginaAtualBaixo = 0;
+Timer? _timerBaixo;
 
   final imagensCima = [
     'assets/images/portao1.jpg',
@@ -55,97 +64,143 @@ class _HomePageState extends State<HomePage> {
     'assets/images/portao10.jpg',
   ];
 
-  @override
-  void dispose() {
-    _pageControllerCima.dispose();
-    _pageControllerBaixo.dispose();
-    super.dispose();
+@override
+void initState() {
+  super.initState();
+  iniciarAutoPlayCima();
+  iniciarAutoPlayBaixo(); // 👈 ADICIONA ISSO
+}
+
+  void iniciarAutoPlayCima() {
+    _timerCima = Timer.periodic(Duration(seconds: 3), (timer) {
+      if (!mounted) return;
+
+      _paginaAtualCima++;
+
+      if (_paginaAtualCima >= imagensCima.length) {
+        _paginaAtualCima = 0;
+      }
+
+      _pageControllerCima.animateToPage(
+        _paginaAtualCima,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: SingleChildScrollView(
-      child: Column(
-        children: [
 
-          // 🔹 CARROSSEL DE CIMA
-          SizedBox(
-            height: 250,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: imagensCima.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      imagensCima[index],
-                      width: 300,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+void iniciarAutoPlayBaixo() {
+  _timerBaixo = Timer.periodic(Duration(seconds: 3), (timer) {
+    if (!mounted) return;
 
-          // 🔹 TEXTO CENTRAL
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Text(
-                  'Serralheria Roberto Junior',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 10),
-                Text('Especialista em portões de garagem'),
-                SizedBox(height: 20),
-                ElevatedButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => CatalogoPage()),
+    setState(() {
+      _paginaAtualBaixo++;
+
+      if (_paginaAtualBaixo >= imagensBaixo.length) {
+        _paginaAtualBaixo = 0;
+      }
+    });
+
+    _pageControllerBaixo.animateToPage(
+      _paginaAtualBaixo,
+      duration: Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
     );
-  }, // 👈 vírgula aqui
-  child: Text('Ver catálogo'),
-),
-              ],
-            ),
-          ),
+  });
+}
 
-          // 🔹 CARROSSEL DE BAIXO
-          SizedBox(
-            height: 250,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: imagensBaixo.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      imagensBaixo[index],
-                      width: 300,
-                      fit: BoxFit.contain,
+ @override
+void dispose() {
+  _timerCima?.cancel();
+  _timerBaixo?.cancel(); // 👈 ADICIONA
+  _pageControllerCima.dispose();
+  _pageControllerBaixo.dispose();
+  super.dispose();
+}
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+
+            // 🔹 CARROSSEL DE CIMA
+            SizedBox(
+              height: 250,
+              child: PageView.builder(
+                controller: _pageControllerCima,
+                itemCount: imagensCima.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        imagensCima[index],
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // 🔹 TEXTO CENTRAL
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Text(
+                    'Serralheria Roberto Junior',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
-              },
+                  SizedBox(height: 10),
+                  Text('Especialista em portões de garagem'),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CatalogoPage()),
+                      );
+                    },
+                    child: Text('Ver catálogo'),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+
+            // 🔹 CARROSSEL DE BAIXO
+            SizedBox(
+              height: 250,
+              child: PageView.builder(
+                controller: _pageControllerBaixo,
+                itemCount: imagensBaixo.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        imagensBaixo[index],
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  ); // 👈 fecha Scaffold
-} // 👈 fecha build
-} // 👈 FECHA A CLASSE HomePageState
+    );
+  }
+}
 
 // ================= CATÁLOGO =================
 
