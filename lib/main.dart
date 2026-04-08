@@ -204,35 +204,70 @@ void dispose() {
 
 // ================= CATÁLOGO =================
 
-class CatalogoPage extends StatelessWidget {
-  final List<String> modelos = const [
-    "Portão Basculante",
-    "Portão Deslizante",
-    "Portão Pivotante"
-  ];
+// ================= CATÁLOGO =================
 
-  const CatalogoPage({super.key});
+class CatalogoPage extends StatelessWidget {
+  final List<String> modelos = [
+    'assets/images/portao1.jpg',
+    'assets/images/portao2.jpg',
+    'assets/images/portao3.jpg',
+    'assets/images/portao4.jpg',
+    'assets/images/portao5.jpg',
+    'assets/images/portao6.jpg',
+    'assets/images/portao7.jpg',
+    'assets/images/portao8.jpg',
+    'assets/images/portao9.jpg',
+    'assets/images/portao10.jpg',
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Catálogo')),
-      body: ListView.builder(
-        itemCount: modelos.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(modelos[index]),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      DetalhesPage(modelo: modelos[index]),
-                ),
-              );
-            },
-          );
-        },
+      appBar: AppBar(
+        title: Center(child: Text('Catálogo')),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(10),
+        child: GridView.builder(
+          itemCount: modelos.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+  crossAxisCount: 2,
+  crossAxisSpacing: 10,
+  mainAxisSpacing: 10,
+  childAspectRatio: 1.1, // 👈 TESTA ESSE VALOR
+),
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetalhesPage(
+                      modelo: "Modelo ${index + 1}",
+                      imagem: modelos[index],
+                    ),
+                  ),
+                );
+              },
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        modelos[index],
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text("Modelo ${index + 1}"),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -242,11 +277,16 @@ class CatalogoPage extends StatelessWidget {
 
 class DetalhesPage extends StatefulWidget {
   final String modelo;
+  final String imagem;
 
-  const DetalhesPage({super.key, required this.modelo});
+  const DetalhesPage({
+    super.key,
+    required this.modelo,
+    required this.imagem,
+  });
 
   @override
-  _DetalhesPageState createState() => _DetalhesPageState();
+  State<DetalhesPage> createState() => _DetalhesPageState();
 }
 
 class _DetalhesPageState extends State<DetalhesPage> {
@@ -259,63 +299,89 @@ class _DetalhesPageState extends State<DetalhesPage> {
       appBar: AppBar(
         title: Text(widget.modelo),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text("Escolha o tamanho:"),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // 🔥 IMAGEM
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                widget.imagem,
+                height: 250,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
 
-          DropdownButton<String>(
-            value: tamanho,
-            items: ["Pequeno", "Médio", "Grande"]
-                .map((t) => DropdownMenuItem(
-                      value: t,
-                      child: Text(t),
-                    ))
-                .toList(),
-            onChanged: (value) {
-              setState(() {
-                tamanho = value!;
-              });
-            },
-          ),
+            const SizedBox(height: 20),
 
-          SizedBox(height: 20),
+            Text(
+              widget.modelo,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
 
-          Text("Escolha a cor:"),
+            const SizedBox(height: 20),
 
-          DropdownButton<String>(
-            value: cor,
-            items: ["Branco", "Preto", "Cinza"]
-                .map((c) => DropdownMenuItem(
-                      value: c,
-                      child: Text(c),
-                    ))
-                .toList(),
-            onChanged: (value) {
-              setState(() {
-                cor = value!;
-              });
-            },
-          ),
+            const Text("Escolha o tamanho:"),
 
-          SizedBox(height: 30),
+            DropdownButton<String>(
+              value: tamanho,
+              items: ["Pequeno", "Médio", "Grande"]
+                  .map((t) => DropdownMenuItem(
+                        value: t,
+                        child: Text(t),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  tamanho = value!;
+                });
+              },
+            ),
 
-          ElevatedButton(
-            child: Text("Pedir orçamento"),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CadastroPage(
-                    modelo: widget.modelo,
-                    tamanho: tamanho,
-                    cor: cor,
+            const SizedBox(height: 20),
+
+            const Text("Escolha a cor:"),
+
+            DropdownButton<String>(
+              value: cor,
+              items: ["Branco", "Preto", "Cinza"]
+                  .map((c) => DropdownMenuItem(
+                        value: c,
+                        child: Text(c),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  cor = value!;
+                });
+              },
+            ),
+
+            const SizedBox(height: 30),
+
+            ElevatedButton(
+              child: const Text("Pedir orçamento"),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CadastroPage(
+                      modelo: widget.modelo,
+                      tamanho: tamanho,
+                      cor: cor,
+                    ),
                   ),
-                ),
-              );
-            },
-          )
-        ],
+                );
+              },
+            ),
+
+            const SizedBox(height: 30),
+          ],
+        ),
       ),
     );
   }
