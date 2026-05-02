@@ -471,31 +471,144 @@ class _CadastroPageState extends State<CadastroPage> {
 
 // ================= ERRO =================
 
-class RelatoErroPage extends StatelessWidget {
+class RelatoErroPage extends StatefulWidget {
   const RelatoErroPage({super.key});
+
+  @override
+  State<RelatoErroPage> createState() => _RelatoErroPageState();
+}
+
+class _RelatoErroPageState extends State<RelatoErroPage> {
+  final tituloController = TextEditingController();
+  final descricaoController = TextEditingController();
+
+  void enviarErro() async {
+    final titulo = tituloController.text.trim();
+    final descricao = descricaoController.text.trim();
+
+    if (titulo.isEmpty || descricao.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Preencha título e descrição"),
+        ),
+      );
+      return;
+    }
+
+    final msg = Uri.encodeComponent(
+      "🐞 *Relato de Erro*\n\n"
+      "📌 Título: $titulo\n\n"
+      "📝 Descrição: $descricao",
+    );
+
+    final uri = Uri.parse("https://wa.me/5511993977881?text=$msg");
+
+    await launchUrl(uri);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Relatar erro")),
-      body: const Center(child: Text("Tela de erro")),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+
+            // 🔹 TÍTULO
+            const Text(
+              "Título",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            TextField(
+              controller: tituloController,
+              maxLength: 100,
+              decoration: InputDecoration(
+                hintText: "Digite o título do erro",
+                counterText: "",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // 🔹 DESCRIÇÃO
+            const Text(
+              "Descrição do erro",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            TextField(
+              controller: descricaoController,
+              maxLines: 6,
+              maxLength: 5000,
+              decoration: InputDecoration(
+                hintText: "Descreva o problema...",
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // 🔥 BOTÃO
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+              ),
+              onPressed: enviarErro,
+              child: const Text("Enviar erro para WhatsApp"),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
+
+//////////////////////////////////////////////////////////////
 
 class BotaoErro extends StatelessWidget {
   const BotaoErro({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const RelatoErroPage()),
-        );
-      },
-      child: const Text("Reportar erro"),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(0, 255, 91, 91),
+            minimumSize: const Size(double.infinity, 50),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const RelatoErroPage(),
+              ),
+            );
+          },
+          icon: const Icon(Icons.bug_report),
+          label: const Text("Reportar erro"),
+        ),
+      ),
     );
   }
 }
