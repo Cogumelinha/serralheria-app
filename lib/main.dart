@@ -1,9 +1,9 @@
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -16,9 +16,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: Colors.black,
         scaffoldBackgroundColor: Colors.grey[100],
-        fontFamily: 'Poppins',
       ),
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }
@@ -29,24 +28,18 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-
 class _HomePageState extends State<HomePage> {
+  final PageController _cima = PageController(viewportFraction: 0.8);
+  final PageController _baixo = PageController(viewportFraction: 0.8);
 
-  final PageController _pageControllerCima =
-      PageController(viewportFraction: 0.8);
+  int iCima = 0;
+  int iBaixo = 0;
 
-  final PageController _pageControllerBaixo =
-      PageController(viewportFraction: 0.8);
-
-  int _paginaAtualCima = 0;
-
-  Timer? _timerCima;
-
-  int _paginaAtualBaixo = 0;
-Timer? _timerBaixo;
+  Timer? t1;
+  Timer? t2;
 
   final imagensCima = [
     'assets/images/portao1.jpg',
@@ -64,135 +57,94 @@ Timer? _timerBaixo;
     'assets/images/portao10.jpg',
   ];
 
-@override
-void initState() {
-  super.initState();
-  iniciarAutoPlayCima();
-  iniciarAutoPlayBaixo(); // 👈 ADICIONA ISSO
-}
+  @override
+  void initState() {
+    super.initState();
 
-  void iniciarAutoPlayCima() {
-    _timerCima = Timer.periodic(Duration(seconds: 3), (timer) {
+    t1 = Timer.periodic(const Duration(seconds: 3), (_) {
       if (!mounted) return;
+      iCima = (iCima + 1) % imagensCima.length;
+      _cima.animateToPage(iCima,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut);
+    });
 
-      _paginaAtualCima++;
-
-      if (_paginaAtualCima >= imagensCima.length) {
-        _paginaAtualCima = 0;
-      }
-
-      _pageControllerCima.animateToPage(
-        _paginaAtualCima,
-        duration: Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
+    t2 = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted) return;
+      iBaixo = (iBaixo + 1) % imagensBaixo.length;
+      _baixo.animateToPage(iBaixo,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut);
     });
   }
 
-
-void iniciarAutoPlayBaixo() {
-  _timerBaixo = Timer.periodic(Duration(seconds: 3), (timer) {
-    if (!mounted) return;
-
-    setState(() {
-      _paginaAtualBaixo++;
-
-      if (_paginaAtualBaixo >= imagensBaixo.length) {
-        _paginaAtualBaixo = 0;
-      }
-    });
-
-    _pageControllerBaixo.animateToPage(
-      _paginaAtualBaixo,
-      duration: Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-  });
-}
-
- @override
-void dispose() {
-  _timerCima?.cancel();
-  _timerBaixo?.cancel(); // 👈 ADICIONA
-  _pageControllerCima.dispose();
-  _pageControllerBaixo.dispose();
-  super.dispose();
-}
+  @override
+  void dispose() {
+    t1?.cancel();
+    t2?.cancel();
+    _cima.dispose();
+    _baixo.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: const BotaoErro(),
       body: SingleChildScrollView(
         child: Column(
           children: [
-
-            // 🔹 CARROSSEL DE CIMA
             SizedBox(
               height: 250,
               child: PageView.builder(
-                controller: _pageControllerCima,
+                controller: _cima,
                 itemCount: imagensCima.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        imagensCima[index],
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  );
-                },
+                itemBuilder: (_, i) => Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(imagensCima[i], fit: BoxFit.cover),
+                  ),
+                ),
               ),
             ),
 
-            // 🔹 TEXTO CENTRAL
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text(
-                    'Serralheria Roberto Junior',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text('Especialista em portões de garagem'),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => CatalogoPage()),
-                      );
-                    },
-                    child: Text('Ver catálogo'),
-                  ),
-                ],
-              ),
+            const SizedBox(height: 20),
+
+            const Text(
+              'Serralheria Roberto Junior',
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
 
-            // 🔹 CARROSSEL DE BAIXO
+            const SizedBox(height: 10),
+            const Text('Especialista em portões de garagem'),
+
+            const SizedBox(height: 20),
+
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => CatalogoPage()),
+                );
+              },
+              child: const Text('Ver catálogo'),
+            ),
+
+            const SizedBox(height: 20),
+
             SizedBox(
               height: 250,
               child: PageView.builder(
-                controller: _pageControllerBaixo,
+                controller: _baixo,
                 itemCount: imagensBaixo.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        imagensBaixo[index],
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  );
-                },
+                itemBuilder: (_, i) => Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(imagensBaixo[i], fit: BoxFit.cover),
+                  ),
+                ),
               ),
             ),
           ],
@@ -204,70 +156,56 @@ void dispose() {
 
 // ================= CATÁLOGO =================
 
-// ================= CATÁLOGO =================
-
 class CatalogoPage extends StatelessWidget {
+  CatalogoPage({super.key});
+
   final List<String> modelos = [
-    'assets/images/portao1.jpg',
-    'assets/images/portao2.jpg',
-    'assets/images/portao3.jpg',
-    'assets/images/portao4.jpg',
-    'assets/images/portao5.jpg',
-    'assets/images/portao6.jpg',
-    'assets/images/portao7.jpg',
-    'assets/images/portao8.jpg',
-    'assets/images/portao9.jpg',
-    'assets/images/portao10.jpg',
-  ];
+  'assets/images/portao1.jpg',
+  'assets/images/portao2.jpg',
+  'assets/images/portao3.jpg',
+  'assets/images/portao4.jpg',
+  'assets/images/portao5.jpg',
+  'assets/images/portao6.jpg',
+  'assets/images/portao7.jpg',
+  'assets/images/portao8.jpg',
+  'assets/images/portao9.jpg',
+  'assets/images/portao10.jpg',
+];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Center(child: Text('Catálogo')),
-      ),
-      body: Padding(
+      appBar: AppBar(title: const Text('Catálogo')),
+      body: GridView.builder(
         padding: const EdgeInsets.all(10),
-        child: GridView.builder(
-          itemCount: modelos.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-  crossAxisCount: 2,
-  crossAxisSpacing: 10,
-  mainAxisSpacing: 10,
-  childAspectRatio: 1.1, // 👈 TESTA ESSE VALOR
-),
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetalhesPage(
-                      modelo: "Modelo ${index + 1}",
-                      imagem: modelos[index],
-                    ),
-                  ),
-                );
-              },
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(
-                        modelos[index],
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text("Modelo ${index + 1}"),
-                ],
-              ),
-            );
-          },
+        itemCount: modelos.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
         ),
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DetalhesPage(
+                    modelo: "Modelo ${index + 1}",
+                    imagem: modelos[index], // 👈 agora é só 1 imagem
+                  ),
+                ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                modelos[index],
+                fit: BoxFit.cover,
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -290,97 +228,107 @@ class DetalhesPage extends StatefulWidget {
 }
 
 class _DetalhesPageState extends State<DetalhesPage> {
-  String tamanho = "Pequeno";
+  final tamanhoController = TextEditingController();
   String cor = "Branco";
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.modelo),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 🔥 IMAGEM
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                widget.imagem,
-                height: 250,
-                width: double.infinity,
-                fit: BoxFit.cover,
+      appBar: AppBar(title: Text(widget.modelo)),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch, // 👈 ESSENCIAL
+            children: [
+              // 🔥 IMAGEM
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  widget.imagem,
+                  height: 250,
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            Text(
-              widget.modelo,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+              // 🔹 TAMANHO
+              const Text(
+                "Informe o tamanho do portão:",
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 8),
 
-            const Text("Escolha o tamanho:"),
-
-            DropdownButton<String>(
-              value: tamanho,
-              items: ["Pequeno", "Médio", "Grande"]
-                  .map((t) => DropdownMenuItem(
-                        value: t,
-                        child: Text(t),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  tamanho = value!;
-                });
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            const Text("Escolha a cor:"),
-
-            DropdownButton<String>(
-              value: cor,
-              items: ["Branco", "Preto", "Cinza"]
-                  .map((c) => DropdownMenuItem(
-                        value: c,
-                        child: Text(c),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  cor = value!;
-                });
-              },
-            ),
-
-            const SizedBox(height: 30),
-
-            ElevatedButton(
-              child: const Text("Pedir orçamento"),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CadastroPage(
-                      modelo: widget.modelo,
-                      tamanho: tamanho,
-                      cor: cor,
-                    ),
+              TextField(
+                controller: tamanhoController,
+                decoration: InputDecoration(
+                  hintText: "Ex: 3m x 2.5m",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                );
-              },
-            ),
+                ),
+              ),
 
-            const SizedBox(height: 30),
-          ],
+              const SizedBox(height: 20),
+
+              // 🔹 COR
+              const Text(
+                "Escolha a cor:",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 8),
+
+              DropdownButtonFormField<String>(
+                value: cor,
+                items: ["Branco", "Preto", "Cinza"]
+                    .map((e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(e),
+                        ))
+                    .toList(),
+                onChanged: (v) => setState(() => cor = v!),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              // 🔥 BOTÃO CONTINUAR
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text("Continuar"),
+                onPressed: () {
+                  if (tamanhoController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Informe o tamanho do portão"),
+                      ),
+                    );
+                    return;
+                  }
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CadastroPage(
+                        modelo: widget.modelo,
+                        tamanho: tamanhoController.text,
+                        cor: cor,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -394,14 +342,15 @@ class CadastroPage extends StatefulWidget {
   final String tamanho;
   final String cor;
 
-  const CadastroPage({super.key, 
+  const CadastroPage({
+    super.key,
     required this.modelo,
     required this.tamanho,
     required this.cor,
   });
 
   @override
-  _CadastroPageState createState() => _CadastroPageState();
+  State<CadastroPage> createState() => _CadastroPageState();
 }
 
 class _CadastroPageState extends State<CadastroPage> {
@@ -410,46 +359,109 @@ class _CadastroPageState extends State<CadastroPage> {
   final emailController = TextEditingController();
   final cidadeController = TextEditingController();
 
+  // 🔥 FUNÇÃO AGORA ESTÁ NO LUGAR CERTO
+  void enviarWhatsApp() async {
+    final msg =
+        "Orçamento:%0A%0A"
+        "👤 Nome: ${nomeController.text}%0A"
+        "📞 Telefone: ${telefoneController.text}%0A"
+        "📧 Email: ${emailController.text}%0A"
+        "📍 Cidade: ${cidadeController.text}%0A%0A"
+        "🔧 Modelo: ${widget.modelo}%0A"
+        "📏 Tamanho: ${widget.tamanho}%0A"
+        "🎨 Cor: ${widget.cor}";
+
+    final uri =
+        Uri.parse("https://wa.me/5511993977881?text=$msg");
+
+    await launchUrl(uri);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Seus dados")),
-      body: Padding(
-        padding: EdgeInsets.all(16),
+      appBar: AppBar(title: const Text("Seus dados")),
+      bottomNavigationBar: const BotaoErro(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+
+            // 🔹 NOME
             TextField(
               controller: nomeController,
-              decoration: InputDecoration(labelText: "Nome"),
+              decoration: InputDecoration(
+                labelText: "Nome",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
+
+            const SizedBox(height: 15),
+
+            // 🔹 TELEFONE
             TextField(
               controller: telefoneController,
-              decoration: InputDecoration(labelText: "Telefone"),
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: "Telefone",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
+
+            const SizedBox(height: 15),
+
+            // 🔹 EMAIL
             TextField(
               controller: emailController,
-              decoration: InputDecoration(labelText: "Email"),
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                labelText: "Email",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
+
+            const SizedBox(height: 15),
+
+            // 🔹 CIDADE
             TextField(
               controller: cidadeController,
-              decoration: InputDecoration(labelText: "Cidade/Estado"),
+              decoration: InputDecoration(
+                labelText: "Cidade/Estado",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
-            SizedBox(height: 20),
 
+            const SizedBox(height: 25),
+
+            // 🔥 BOTÃO FINAL CORRIGIDO
             ElevatedButton(
-              child: Text("Enviar para WhatsApp"),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+              ),
+              child: const Text("Enviar para WhatsApp"),
               onPressed: () {
-                enviarWhatsAppCompleto(
-                  widget.modelo,
-                  widget.tamanho,
-                  widget.cor,
-                  nomeController.text,
-                  telefoneController.text,
-                  emailController.text,
-                  cidadeController.text,
-                );
+                if (nomeController.text.isEmpty ||
+                    telefoneController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Preencha nome e telefone"),
+                    ),
+                  );
+                  return;
+                }
+
+                enviarWhatsApp(); // 👈 AGORA FUNCIONA
               },
-            )
+            ),
           ],
         ),
       ),
@@ -457,34 +469,33 @@ class _CadastroPageState extends State<CadastroPage> {
   }
 }
 
-// ================= WHATSAPP =================
+// ================= ERRO =================
 
-void enviarWhatsAppCompleto(
-  String modelo,
-  String tamanho,
-  String cor,
-  String nome,
-  String telefone,
-  String email,
-  String cidade,
-) async {
+class RelatoErroPage extends StatelessWidget {
+  const RelatoErroPage({super.key});
 
-  String mensagem =
-      "Olá! Gostaria de um orçamento:%0A%0A"
-      "👤 Nome: $nome%0A"
-      "📞 Telefone: $telefone%0A"
-      "📧 Email: $email%0A"
-      "📍 Cidade: $cidade%0A%0A"
-      "🔧 Modelo: $modelo%0A"
-      "📏 Tamanho: $tamanho%0A"
-      "🎨 Cor: $cor";
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Relatar erro")),
+      body: const Center(child: Text("Tela de erro")),
+    );
+  }
+}
 
-  final Uri uri =
-      Uri.parse("https://wa.me/5511945558377?text=$mensagem");
+class BotaoErro extends StatelessWidget {
+  const BotaoErro({super.key});
 
-  if (await canLaunchUrl(uri)) {
-    await launchUrl(uri);
-  } else {
-    print("Erro ao abrir WhatsApp");
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const RelatoErroPage()),
+        );
+      },
+      child: const Text("Reportar erro"),
+    );
   }
 }
